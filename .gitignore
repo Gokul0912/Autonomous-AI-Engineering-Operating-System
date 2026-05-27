@@ -1,0 +1,8 @@
+.veltrix/
+server.out.log
+server.err.log
+node_modules/
+dist/
+build/
+target/
+.DS_Store

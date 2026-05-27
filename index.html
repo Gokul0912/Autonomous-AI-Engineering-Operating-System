@@ -25,6 +25,10 @@
             <span data-icon="activity"></span>
             Command
           </button>
+          <button class="nav-item" data-view="repositories" title="Repositories">
+            <span data-icon="folder"></span>
+            Repos
+          </button>
           <button class="nav-item" data-view="agents" title="Agents">
             <span data-icon="bot"></span>
             Agents
@@ -45,6 +49,14 @@
             <span data-icon="shield"></span>
             Incidents
           </button>
+          <button class="nav-item" data-view="deployments" title="Deployments">
+            <span data-icon="rocket"></span>
+            Deploys
+          </button>
+          <button class="nav-item" data-view="analytics" title="Analytics">
+            <span data-icon="chart"></span>
+            Analytics
+          </button>
           <button class="nav-item" data-view="runtime" title="Runtime">
             <span data-icon="cpu"></span>
             Runtime
@@ -52,6 +64,10 @@
           <button class="nav-item" data-view="plugins" title="Plugins">
             <span data-icon="plug"></span>
             Plugins
+          </button>
+          <button class="nav-item" data-view="settings" title="Settings">
+            <span data-icon="settings"></span>
+            Settings
           </button>
         </nav>
 
@@ -91,8 +107,8 @@
             <small id="runtimeHost">Detecting host...</small>
           </div>
           <div>
-            <strong>Vector DB</strong>
-            <small>Warming semantic index</small>
+            <strong>Memory Index</strong>
+            <small>Local repository state</small>
           </div>
           <div>
             <strong>Sandbox</strong>
@@ -165,7 +181,7 @@
               <div class="panel-header">
                 <div>
                   <p class="eyebrow">Current workflow</p>
-                  <h3>OAuth rollout analysis</h3>
+                  <h3>Repository intelligence</h3>
                 </div>
                 <button class="icon-button" title="Pause workflow"><span data-icon="pause"></span></button>
               </div>
@@ -188,6 +204,42 @@
           </div>
         </section>
 
+        <section class="view" id="view-repositories">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Repository intelligence</p>
+              <h2>Local import, framework detection, service mapping, and semantic indexing</h2>
+            </div>
+            <div class="repo-import">
+              <label class="path-field">
+                <span data-icon="folder"></span>
+                <input id="repoPath" type="text" autocomplete="off" spellcheck="false" placeholder="D:\path\to\repository" />
+              </label>
+              <button class="primary-button" id="scanRepo"><span data-icon="git"></span> Scan repository</button>
+            </div>
+          </div>
+          <div class="repository-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Connected repositories</p>
+                  <h3>Repository Index</h3>
+                </div>
+              </div>
+              <div class="repository-grid" id="repositoryGrid"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Latest analysis</p>
+                  <h3>Codebase Intelligence</h3>
+                </div>
+              </div>
+              <div class="analysis-panel" id="analysisPanel"></div>
+            </section>
+          </div>
+        </section>
+
         <section class="view" id="view-agents">
           <div class="section-head">
             <div>
@@ -196,7 +248,18 @@
             </div>
             <button class="primary-button" id="deployAgents"><span data-icon="zap"></span> Coordinate agents</button>
           </div>
-          <div class="agent-grid" id="agentGrid"></div>
+          <div class="agent-runtime-layout">
+            <div class="agent-grid" id="agentGrid"></div>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Execution queue</p>
+                  <h3>Agent Tasks</h3>
+                </div>
+              </div>
+              <div class="agent-task-list" id="agentTaskList"></div>
+            </section>
+          </div>
         </section>
 
         <section class="view" id="view-architecture">
@@ -215,12 +278,12 @@
             <canvas id="architectureCanvas" aria-label="Interactive architecture graph"></canvas>
             <aside class="inspector" id="nodeInspector">
               <p class="eyebrow">Selected node</p>
-              <h3>API Gateway</h3>
-              <p>Routes authenticated traffic to product services and streams request metrics into event memory.</p>
+              <h3>No node selected</h3>
+              <p>Scan a repository to generate a file and dependency graph.</p>
               <dl>
-                <div><dt>Health</dt><dd>Operational</dd></div>
-                <div><dt>Dependencies</dt><dd>Auth, Billing, Events</dd></div>
-                <div><dt>Risk</dt><dd>Medium coupling</dd></div>
+                <div><dt>Health</dt><dd>Waiting</dd></div>
+                <div><dt>Inbound</dt><dd>0</dd></div>
+                <div><dt>Risk</dt><dd>0</dd></div>
               </dl>
             </aside>
           </section>
@@ -234,7 +297,36 @@
             </div>
             <button class="primary-button" id="newWorkflow"><span data-icon="plus"></span> New workflow</button>
           </div>
-          <div class="workflow-grid" id="workflowGrid"></div>
+          <div class="workflow-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Workflow catalog</p>
+                  <h3>Definitions</h3>
+                </div>
+              </div>
+              <div class="workflow-grid" id="workflowGrid"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Run history</p>
+                  <h3>Executions</h3>
+                </div>
+                <button class="secondary-button compact-button" id="advanceWorkflow"><span data-icon="play"></span> Advance</button>
+              </div>
+              <div class="workflow-run-list" id="workflowRunList"></div>
+            </section>
+            <section class="panel workflow-detail-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Run details</p>
+                  <h3 id="workflowDetailTitle">No run selected</h3>
+                </div>
+              </div>
+              <div class="workflow-detail" id="workflowDetail"></div>
+            </section>
+          </div>
         </section>
 
         <section class="view" id="view-memory">
@@ -245,7 +337,7 @@
             </div>
             <label class="search-box memory-search">
               <span data-icon="search"></span>
-              <input id="memorySearch" type="search" placeholder="Why was Redis introduced?" />
+              <input id="memorySearch" type="search" placeholder="Search files, imports, functions, classes..." />
             </label>
           </div>
           <div class="memory-layout">
@@ -300,6 +392,46 @@
           </div>
         </section>
 
+        <section class="view" id="view-deployments">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Deployment intelligence</p>
+              <h2>Rollout health, regression detection, and rollback confidence</h2>
+            </div>
+            <button class="primary-button" id="analyzeDeployments"><span data-icon="refresh"></span> Analyze deployments</button>
+          </div>
+          <div class="deployment-grid" id="deploymentGrid"></div>
+        </section>
+
+        <section class="view" id="view-analytics">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Engineering analytics</p>
+              <h2>Technical debt, reliability, delivery health, and risky hotspots</h2>
+            </div>
+          </div>
+          <div class="analytics-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Delivery metrics</p>
+                  <h3>Operating Scoreboard</h3>
+                </div>
+              </div>
+              <div class="analytics-scoreboard" id="analyticsScoreboard"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Debt intelligence</p>
+                  <h3>Prioritized Risk</h3>
+                </div>
+              </div>
+              <div class="risk-table" id="riskTable"></div>
+            </section>
+          </div>
+        </section>
+
         <section class="view" id="view-runtime">
           <div class="section-head">
             <div>
@@ -343,13 +475,45 @@
             </div>
             <button class="primary-button" id="installPlugin"><span data-icon="plus"></span> Add plugin</button>
           </div>
-          <div class="plugin-grid">
-            <article class="plugin-card"><strong>GitHub Intelligence</strong><p>PR review, commit impact, reviewer routing, and code ownership context.</p><span class="status-chip">Enabled</span></article>
-            <article class="plugin-card"><strong>Docker Runtime</strong><p>Container health, image scans, compose orchestration, and sandbox execution.</p><span class="status-chip">Enabled</span></article>
-            <article class="plugin-card"><strong>Ollama Models</strong><p>Local DeepSeek, Qwen, and embedding model orchestration.</p><span class="status-chip running">Warming</span></article>
-            <article class="plugin-card"><strong>Kubernetes Deployments</strong><p>Rollout tracking, rollback candidates, and cluster health analysis.</p><span class="status-chip waiting">Available</span></article>
-            <article class="plugin-card"><strong>Slack War Room</strong><p>Incident room creation, AI summaries, and escalation notifications.</p><span class="status-chip waiting">Available</span></article>
-            <article class="plugin-card"><strong>Custom Agent SDK</strong><p>Build role-specific agents with scoped tools, memory, and workflow hooks.</p><span class="status-chip">Enabled</span></article>
+          <div class="plugin-grid" id="pluginGrid"></div>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Local product settings</p>
+              <h2>Models, privacy, sandbox policy, retention, and runtime behavior</h2>
+            </div>
+            <button class="primary-button" id="saveSettings"><span data-icon="check"></span> Save settings</button>
+          </div>
+          <div class="settings-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">AI runtime</p>
+                  <h3>Local Models</h3>
+                </div>
+              </div>
+              <div class="settings-list">
+                <label>Default model<input id="defaultModel" value="qwen2.5-coder" /></label>
+                <label>Memory retention days<input id="retentionDays" type="number" value="90" /></label>
+                <label class="switch-row"><span>Allow sandbox network</span><input id="sandboxNetwork" type="checkbox" /></label>
+                <label class="switch-row"><span>Share telemetry</span><input id="telemetry" type="checkbox" /></label>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Product architecture</p>
+                  <h3>Runtime Layers</h3>
+                </div>
+              </div>
+              <div class="layer-list">
+                <div><strong>Desktop Layer</strong><p>Tauri shell, filesystem access, local terminal bridge, secure permissions.</p></div>
+                <div><strong>Runtime Layer</strong><p>Agents, workflows, events, memory, sandbox execution, plugin host.</p></div>
+                <div><strong>Cloud Layer</strong><p>Optional team sync, collaboration, remote dashboards, notifications.</p></div>
+              </div>
+            </section>
           </div>
         </section>
       </main>

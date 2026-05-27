@@ -657,9 +657,107 @@ h3 {
   background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
 }
 
-.agent-grid,
-.workflow-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.agent-runtime-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.55fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.agent-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workflow-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(320px, 0.8fr);
+  gap: 18px;
+}
+
+.workflow-detail-panel {
+  grid-column: 1 / -1;
+}
+
+.workflow-grid,
+.workflow-run-list,
+.workflow-detail,
+.workflow-checkpoints,
+.workflow-events {
+  display: grid;
+  gap: 12px;
+}
+
+.workflow-card {
+  cursor: pointer;
+}
+
+.workflow-run-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 78px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(155, 176, 206, 0.06);
+  color: var(--text);
+  text-align: left;
+}
+
+.workflow-run-item.active {
+  border-color: rgba(79, 214, 255, 0.55);
+  background: rgba(79, 214, 255, 0.1);
+}
+
+.workflow-run-item small,
+.workflow-checkpoint small {
+  display: block;
+  margin-top: 5px;
+  color: var(--faint);
+}
+
+.workflow-progress-card,
+.workflow-checkpoint,
+.workflow-events {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(155, 176, 206, 0.06);
+}
+
+.workflow-progress-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.workflow-progress-card .bar {
+  grid-column: 1 / -1;
+}
+
+.workflow-checkpoint {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.workflow-events p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.workflow-events span {
+  color: var(--faint);
+  font-weight: 800;
+}
+
+.compact-button {
+  min-height: 36px;
+  padding-inline: 12px;
 }
 
 .agent-card,
@@ -696,6 +794,43 @@ h3 {
 .agent-load span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.agent-mini-tasks,
+.agent-task-list {
+  display: grid;
+  gap: 9px;
+}
+
+.agent-mini-tasks span {
+  display: block;
+  overflow: hidden;
+  color: var(--faint);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-task-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(155, 176, 206, 0.06);
+}
+
+.agent-task-item p {
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.agent-task-item small {
+  color: var(--faint);
 }
 
 .architecture-board {
@@ -753,6 +888,20 @@ h3 {
   text-align: right;
 }
 
+.inspector-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(155, 176, 206, 0.06);
+}
+
+.inspector-list strong {
+  font-size: 13px;
+}
+
 .segmented {
   display: inline-grid;
   grid-template-columns: repeat(3, 1fr);
@@ -776,23 +925,70 @@ h3 {
   color: var(--text);
 }
 
+.repo-import {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.path-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(155, 176, 206, 0.06);
+}
+
+.path-field svg {
+  width: 17px;
+  height: 17px;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.path-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
 .memory-layout,
 .incident-layout,
-.runtime-layout {
+.runtime-layout,
+.repository-layout,
+.analytics-layout,
+.settings-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.75fr);
   gap: 18px;
 }
 
 .service-grid,
-.plugin-grid {
+.plugin-grid,
+.repository-grid,
+.deployment-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
 .service-card,
-.plugin-card {
+.plugin-card,
+.repository-card,
+.deployment-card,
+.score-card,
+.risk-row,
+.analysis-panel > div,
+.settings-list label,
+.layer-list div {
   display: grid;
   gap: 10px;
   min-height: 134px;
@@ -803,11 +999,78 @@ h3 {
 }
 
 .service-card p,
-.plugin-card p {
+.plugin-card p,
+.repository-card p,
+.deployment-card p,
+.score-card p,
+.risk-row p,
+.analysis-panel p,
+.layer-list p {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.analysis-panel,
+.analytics-scoreboard,
+.risk-table,
+.settings-list,
+.layer-list {
+  display: grid;
+  gap: 12px;
+}
+
+.analytics-scoreboard {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.repository-meta,
+.deployment-meta,
+.risk-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.repository-meta span,
+.deployment-meta span,
+.risk-meta span {
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: rgba(155, 176, 206, 0.1);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.settings-list label {
+  min-height: 62px;
+}
+
+.settings-list input:not([type="checkbox"]) {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: 0;
+  background: rgba(155, 176, 206, 0.06);
+  color: var(--text);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+}
+
+.switch-row input,
+.settings-list input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cyan);
 }
 
 .policy-list {
@@ -1043,11 +1306,20 @@ h3 {
 
   .command-layout,
   .hero-panel,
+  .agent-runtime-layout,
   .architecture-board,
+  .workflow-layout,
   .memory-layout,
   .incident-layout,
-  .runtime-layout {
+  .runtime-layout,
+  .repository-layout,
+  .analytics-layout,
+  .settings-layout {
     grid-template-columns: 1fr;
+  }
+
+  .workflow-detail-panel {
+    grid-column: auto;
   }
 
   .inspector {
@@ -1101,10 +1373,14 @@ h3 {
   .status-grid,
   .split-grid,
   .agent-grid,
+  .agent-runtime-layout,
   .workflow-grid,
   .runtime-strip,
   .service-grid,
-  .plugin-grid {
+  .plugin-grid,
+  .repository-grid,
+  .deployment-grid,
+  .analytics-scoreboard {
     grid-template-columns: 1fr;
   }
 
@@ -1114,7 +1390,12 @@ h3 {
     flex-direction: column;
   }
 
+  .repo-import {
+    grid-template-columns: 1fr;
+  }
+
   .search-box,
+  .path-field,
   .primary-button,
   .secondary-button,
   .danger-button {
