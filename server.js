@@ -4,6 +4,7 @@ const fsp = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
 const crypto = require("node:crypto");
+const { execFile } = require("node:child_process");
 
 const root = __dirname;
 const dataDir = path.join(root, ".veltrix");
@@ -208,7 +209,7 @@ function id(prefix) {
 function createDefaultDb() {
   return {
     meta: {
-      product: "Veltrix AI Engineering OS",
+      product: "Veltrix Control Plane",
       version: "0.1.0",
       mode: "local-first",
       createdAt: now(),
@@ -251,6 +252,8 @@ function createDefaultDb() {
       { id: "plugin_sdk", name: "Custom Agent SDK", status: "enabled", category: "Extensibility", hooks: ["agent.registered", "tool.invoked"] },
     ],
     architecture: { nodes: [], edges: [] },
+    impactAnalyses: [],
+    reviewReports: [],
     workflowRuns: [],
     agentTasks: [],
     executions: [],
@@ -262,7 +265,7 @@ let db = createDefaultDb();
 
 function normalizeDb() {
   const fresh = createDefaultDb();
-  db.meta = { ...fresh.meta, ...(db.meta || {}), runtimeStartedAt: now(), schemaVersion: 2 };
+  db.meta = { ...(db.meta || {}), product: fresh.meta.product, runtimeStartedAt: now(), schemaVersion: 2 };
   db.settings = { ...fresh.settings, ...(db.settings || {}) };
   db.agents = fresh.agents;
   db.workflows = fresh.workflows;
@@ -276,8 +279,10 @@ function normalizeDb() {
     return plugin;
   });
   db.architecture = db.architecture && Array.isArray(db.architecture.nodes) ? db.architecture : fresh.architecture;
+  db.impactAnalyses = Array.isArray(db.impactAnalyses) ? db.impactAnalyses : [];
+  db.reviewReports = Array.isArray(db.reviewReports) ? db.reviewReports : [];
   db.workflowRuns = Array.isArray(db.workflowRuns) ? db.workflowRuns : [];
-  db.agentTasks = Array.isArray(db.agentTasks) ? db.agentTasks : [];
+  db.agentTasks = Array.isArray(db.agentTasks) ? db.agentTasks.map(normalizeAgentTask) : [];
   db.executions = Array.isArray(db.executions) ? db.executions : [];
   db.events = Array.isArray(db.events) ? db.events : [];
 }
@@ -321,6 +326,29 @@ function agentTaskSummary(task) {
   };
 }
 
+function defaultTaskPermissions(agentId) {
+  const agent = db.agents.find((item) => item.id === agentId);
+  const base = ["read:index", "read:memory", "write:events"];
+  if (!agent) return base;
+  if (["agent_backend", "agent_frontend", "agent_docs"].includes(agent.id)) return [...base, "write:workspace"];
+  if (agent.id === "agent_testing") return [...base, "run:sandbox"];
+  if (agent.id === "agent_devops") return [...base, "read:runtime", "run:sandbox"];
+  if (agent.id === "agent_security") return [...base, "read:dependencies", "read:secrets-metadata"];
+  return [...base, "plan:workflow"];
+}
+
+function normalizeAgentTask(task) {
+  task.attempts = Number.isFinite(task.attempts) ? task.attempts : 1;
+  task.maxAttempts = Number.isFinite(task.maxAttempts) ? task.maxAttempts : 3;
+  task.permissions = Array.isArray(task.permissions) ? task.permissions : defaultTaskPermissions(task.agentId);
+  task.toolRuns = Array.isArray(task.toolRuns) ? task.toolRuns : [];
+  task.logs = Array.isArray(task.logs) && task.logs.length
+    ? task.logs
+    : [{ id: id("agt_log"), timestamp: task.createdAt || now(), level: "info", message: `Task accepted from ${task.source || "runtime"}.` }];
+  task.events = Array.isArray(task.events) ? task.events : [];
+  return task;
+}
+
 function createAgentTask({ agentId, workflowRunId = null, checkpointId = null, title, detail, status = "queued", source = "workflow" }) {
   const timestamp = now();
   const task = {
@@ -332,6 +360,18 @@ function createAgentTask({ agentId, workflowRunId = null, checkpointId = null, t
     detail,
     status,
     source,
+    attempts: 1,
+    maxAttempts: 3,
+    permissions: defaultTaskPermissions(agentId),
+    toolRuns: [],
+    logs: [
+      {
+        id: id("agt_log"),
+        timestamp,
+        level: "info",
+        message: `Task accepted from ${source}.`,
+      },
+    ],
     createdAt: timestamp,
     startedAt: status === "running" || status === "done" ? timestamp : null,
     finishedAt: status === "done" ? timestamp : null,
@@ -346,6 +386,52 @@ function createAgentTask({ agentId, workflowRunId = null, checkpointId = null, t
   db.agentTasks.unshift(task);
   db.agentTasks = db.agentTasks.slice(0, 300);
   return task;
+}
+
+function transitionAgentTask(task, status, message) {
+  const previousStatus = task.status;
+  task.status = status;
+  if (status === "running" && !task.startedAt) task.startedAt = now();
+  if (["done", "failed", "blocked"].includes(status)) task.finishedAt = now();
+  const log = {
+    id: id("agt_log"),
+    timestamp: now(),
+    level: status === "failed" || status === "blocked" ? "warning" : "info",
+    message: message || `Task moved from ${previousStatus} to ${status}.`,
+  };
+  task.logs.unshift(log);
+  task.events.unshift({ id: id("agt_evt"), timestamp: log.timestamp, message: log.message });
+  return task;
+}
+
+function createToolExecution({ task = null, command = "npm test -- --changed", tool = "sandbox.exec" }) {
+  const execution = {
+    id: id("exec"),
+    agentTaskId: task?.id || null,
+    agentId: task?.agentId || null,
+    tool,
+    command,
+    isolation: db.settings.sandboxNetwork ? "container-policy:networked" : "container-policy:restricted",
+    status: "recorded",
+    replayable: true,
+    durationMs: 980 + Math.floor(Math.random() * 900),
+    startedAt: now(),
+    finishedAt: now(),
+    permissionDecision: task ? (task.permissions.includes("run:sandbox") || task.permissions.includes("write:workspace") ? "allowed" : "read-only allowed") : "allowed",
+  };
+  db.executions.unshift(execution);
+  db.executions = db.executions.slice(0, 200);
+  if (task) {
+    task.toolRuns.unshift(execution);
+    task.logs.unshift({
+      id: id("agt_log"),
+      timestamp: now(),
+      level: "info",
+      message: `Tool ${tool} recorded execution ${execution.id}.`,
+    });
+  }
+  recordEvent("Sandbox", `Recorded execution: ${execution.command}`, "info", execution);
+  return execution;
 }
 
 function syncAgentTaskFromCheckpoint(run, checkpoint) {
@@ -367,7 +453,7 @@ function syncAgentTaskFromCheckpoint(run, checkpoint) {
 }
 
 function syncAgentRuntimeState() {
-  db.agentTasks = (db.agentTasks || []).slice(0, 300);
+  db.agentTasks = (db.agentTasks || []).map(normalizeAgentTask).slice(0, 300);
   db.agents = db.agents.map((agent) => {
     const tasks = db.agentTasks.filter((task) => task.agentId === agent.id);
     const active = tasks.find((task) => task.status === "running") || tasks.find((task) => task.status === "queued");
@@ -522,6 +608,162 @@ function readBody(req) {
       }
     });
   });
+}
+
+function execFileSafe(command, args, options = {}) {
+  return new Promise((resolve) => {
+    execFile(command, args, { timeout: 5000, windowsHide: true, ...options }, (error, stdout) => {
+      if (error) {
+        resolve("");
+        return;
+      }
+      resolve(stdout.toString());
+    });
+  });
+}
+
+async function detectChangedFiles(repoPath) {
+  const status = await execFileSafe("git", ["status", "--porcelain"], { cwd: repoPath });
+  return status
+    .split(/\r?\n/)
+    .filter((line) => line.trim())
+    .map((line) => line.slice(3).trim().replace(/^"|"$/g, ""))
+    .map((file) => file.split(" -> ").pop())
+    .filter((file) => !ignoredFiles.has(path.basename(file)))
+    .filter(Boolean);
+}
+
+function traceImpactedFiles(seedFiles, dependencyGraph) {
+  const edges = dependencyGraph?.dependencyEdges || [];
+  const normalizedSeeds = new Set(seedFiles.map(toIndexPath));
+  const impacted = new Set(normalizedSeeds);
+  let changed = true;
+  while (changed && impacted.size < 120) {
+    changed = false;
+    for (const edge of edges) {
+      if (impacted.has(edge.to) && !impacted.has(edge.from)) {
+        impacted.add(edge.from);
+        changed = true;
+      }
+      if (impacted.has(edge.from) && !impacted.has(edge.to)) {
+        impacted.add(edge.to);
+        changed = true;
+      }
+    }
+  }
+  return [...impacted];
+}
+
+function moduleRisk(file, dependencyGraph) {
+  const module = (dependencyGraph?.modules || []).find((item) => item.path === file);
+  if (!module) return 18;
+  return Math.min(99, module.risk + module.inbound * 4 + module.outbound * 3);
+}
+
+async function createImpactAnalysis({ repoId, files = [], query = "" } = {}) {
+  const repo = db.repositories.find((item) => item.id === repoId) || db.repositories[0];
+  if (!repo) {
+    const error = new Error("No repository indexed for impact analysis");
+    error.status = 400;
+    throw error;
+  }
+  const indexedFiles = repo.analysis?.indexedFiles || [];
+  const dependencyGraph = repo.analysis?.dependencyGraph || { dependencyEdges: [], modules: [] };
+  let changedFiles = files.map(toIndexPath).filter(Boolean);
+  if (!changedFiles.length) {
+    changedFiles = (await detectChangedFiles(repo.path)).map(toIndexPath);
+  }
+  if (query && !changedFiles.length) {
+    const needle = query.toLowerCase();
+    changedFiles = indexedFiles
+      .filter((file) => `${file.path} ${file.language} ${file.imports.join(" ")} ${file.definitions.join(" ")} ${file.tags.join(" ")} ${file.searchText || ""}`.toLowerCase().includes(needle))
+      .map((file) => toIndexPath(file.path))
+      .slice(0, 12);
+  }
+  if (!changedFiles.length) {
+    changedFiles = (dependencyGraph.modules || []).slice(0, 5).map((module) => module.path);
+  }
+  const impactedFiles = traceImpactedFiles(changedFiles, dependencyGraph);
+  const impactedModules = impactedFiles
+    .map((file) => ({
+      file,
+      risk: moduleRisk(file, dependencyGraph),
+      reason: changedFiles.includes(file) ? "changed file" : "dependency neighbor",
+      tags: indexedFiles.find((item) => toIndexPath(item.path) === file)?.tags || [],
+    }))
+    .sort((a, b) => b.risk - a.risk)
+    .slice(0, 40);
+  const maxRisk = impactedModules.reduce((max, item) => Math.max(max, item.risk), 0);
+  const recommendedAgents = [
+    "Planner",
+    impactedModules.some((item) => item.tags.includes("frontend")) ? "Frontend" : null,
+    impactedModules.some((item) => item.tags.includes("backend") || item.file.includes("server")) ? "Backend" : null,
+    "Architecture",
+    maxRisk > 60 ? "Security" : null,
+    "Testing",
+  ].filter(Boolean);
+  const testPlan = [
+    "npm.cmd run check",
+    impactedModules.some((item) => item.tags.includes("frontend")) ? "Run UI smoke coverage for touched views" : null,
+    impactedModules.some((item) => item.tags.includes("backend")) ? "Exercise affected API endpoints with persisted runtime state" : null,
+    maxRisk > 70 ? "Run dependency and permission review before merge" : null,
+  ].filter(Boolean);
+  const analysis = {
+    id: id("impact"),
+    repoId: repo.id,
+    repoName: repo.name,
+    repoPath: repo.path,
+    query,
+    changedFiles,
+    impactedFiles,
+    impactedModules,
+    recommendedAgents,
+    testPlan,
+    riskScore: Math.min(99, Math.round(maxRisk || changedFiles.length * 8)),
+    summary: `${changedFiles.length} changed seed files affect ${impactedFiles.length} indexed files through local dependency and module signals.`,
+    createdAt: now(),
+  };
+  db.impactAnalyses.unshift(analysis);
+  db.impactAnalyses = db.impactAnalyses.slice(0, 80);
+  db.memory.unshift({
+    id: id("mem"),
+    title: `Impact analysis: ${repo.name}`,
+    body: analysis.summary,
+    tags: ["Impact", repo.language, ...recommendedAgents],
+    score: 0.86,
+    source: "repository-index",
+    createdAt: now(),
+  });
+  recordEvent("Repository Intelligence", `Impact analysis created for ${repo.name}: ${analysis.summary}`, "info", { analysisId: analysis.id });
+  await saveDb();
+  return analysis;
+}
+
+async function createReviewReport({ impactId } = {}) {
+  const impact = db.impactAnalyses.find((item) => item.id === impactId) || db.impactAnalyses[0] || (await createImpactAnalysis({}));
+  const blockers = impact.riskScore > 75 ? ["High dependency risk requires explicit reviewer sign-off."] : [];
+  const report = {
+    id: id("review"),
+    impactId: impact.id,
+    repoId: impact.repoId,
+    title: `Engineering review brief for ${impact.repoName}`,
+    status: blockers.length ? "needs-review" : "ready",
+    riskScore: impact.riskScore,
+    summary: impact.summary,
+    sections: [
+      { title: "Changed surface", body: impact.changedFiles.slice(0, 12).join(", ") || "No changed files detected; using highest-signal modules." },
+      { title: "Impacted modules", body: impact.impactedModules.slice(0, 10).map((item) => `${item.file} (${item.risk})`).join(", ") },
+      { title: "Recommended agents", body: impact.recommendedAgents.join(", ") },
+      { title: "Verification plan", body: impact.testPlan.join("; ") },
+      { title: "Merge blockers", body: blockers.join(" ") || "No automatic blockers from current local signals." },
+    ],
+    createdAt: now(),
+  };
+  db.reviewReports.unshift(report);
+  db.reviewReports = db.reviewReports.slice(0, 80);
+  recordEvent("Review Agent", `Generated review brief: ${report.title}`, blockers.length ? "warning" : "info", { reportId: report.id });
+  await saveDb();
+  return report;
 }
 
 function runtimeSnapshot() {
@@ -812,9 +1054,12 @@ async function routeApi(req, res, url) {
       memory: db.memory,
       plugins: db.plugins,
       architecture: db.architecture,
+      impactAnalyses: db.impactAnalyses.slice(0, 30),
+      reviewReports: db.reviewReports.slice(0, 30),
       analytics: analyticsSnapshot(),
       settings: db.settings,
       events: db.events.slice(0, 25),
+      executions: db.executions.slice(0, 40),
     });
     return true;
   }
@@ -844,7 +1089,7 @@ async function routeApi(req, res, url) {
 
   if (url.pathname === "/api/agents/coordinate" && req.method === "POST") {
     const body = await readBody(req);
-    const goal = body.goal || "Autonomous engineering task";
+    const goal = body.goal || "Engineering task";
     const plan = db.agents.slice(0, 6).map((agent, index) => {
       const task = createAgentTask({
         agentId: agent.id,
@@ -874,8 +1119,75 @@ async function routeApi(req, res, url) {
     return true;
   }
 
+  const agentTaskMatch = url.pathname.match(/^\/api\/agents\/tasks\/([^/]+)$/);
+  if (agentTaskMatch) {
+    syncAgentRuntimeState();
+    const task = db.agentTasks.find((item) => item.id === agentTaskMatch[1]);
+    if (!task) {
+      sendJson(res, { error: "Agent task not found" }, 404);
+      return true;
+    }
+    sendJson(res, { task: agentTaskSummary(task) });
+    return true;
+  }
+
+  const agentTaskActionMatch = url.pathname.match(/^\/api\/agents\/tasks\/([^/]+)\/(advance|fail|retry|tool-run)$/);
+  if (agentTaskActionMatch && req.method === "POST") {
+    const task = db.agentTasks.find((item) => item.id === agentTaskActionMatch[1]);
+    if (!task) {
+      sendJson(res, { error: "Agent task not found" }, 404);
+      return true;
+    }
+    normalizeAgentTask(task);
+    const action = agentTaskActionMatch[2];
+    let execution = null;
+    if (action === "advance") {
+      const nextStatus = task.status === "queued" ? "running" : "done";
+      transitionAgentTask(task, nextStatus, nextStatus === "running" ? "Agent started task execution." : "Agent completed assigned task.");
+    }
+    if (action === "fail") {
+      transitionAgentTask(task, "failed", "Agent task marked failed during execution.");
+    }
+    if (action === "retry") {
+      task.attempts += 1;
+      task.finishedAt = null;
+      transitionAgentTask(task, "running", `Retry attempt ${task.attempts} started.`);
+    }
+    if (action === "tool-run") {
+      const body = await readBody(req);
+      transitionAgentTask(task, "running", "Agent requested sandbox tool execution.");
+      execution = createToolExecution({ task, command: body.command || "npm test -- --changed", tool: body.tool || "sandbox.exec" });
+    }
+    syncAgentRuntimeState();
+    await saveDb();
+    sendJson(res, { ok: true, task: agentTaskSummary(task), tasks: db.agentTasks.slice(0, 120).map(agentTaskSummary), agents: db.agents, execution });
+    return true;
+  }
+
   if (url.pathname === "/api/architecture") {
     sendJson(res, db.architecture);
+    return true;
+  }
+
+  if (url.pathname === "/api/repositories/impact" && req.method === "POST") {
+    const analysis = await createImpactAnalysis(await readBody(req));
+    sendJson(res, { ok: true, analysis, impactAnalyses: db.impactAnalyses.slice(0, 30), memory: db.memory.slice(0, 80) });
+    return true;
+  }
+
+  if (url.pathname === "/api/repositories/impact") {
+    sendJson(res, { impactAnalyses: db.impactAnalyses.slice(0, 80) });
+    return true;
+  }
+
+  if (url.pathname === "/api/reviews/generate" && req.method === "POST") {
+    const report = await createReviewReport(await readBody(req));
+    sendJson(res, { ok: true, report, reviewReports: db.reviewReports.slice(0, 30), impactAnalyses: db.impactAnalyses.slice(0, 30) });
+    return true;
+  }
+
+  if (url.pathname === "/api/reviews") {
+    sendJson(res, { reviewReports: db.reviewReports.slice(0, 80) });
     return true;
   }
 
@@ -950,13 +1262,13 @@ async function routeApi(req, res, url) {
   if (url.pathname === "/api/incidents/simulate" && req.method === "POST") {
     const incident = {
       id: id("inc"),
-      title: "Synthetic checkout error spike",
+      title: "Checkout error spike",
       severity: "medium",
       status: "investigating",
       service: "Gateway",
       confidence: 64,
       startedAt: now(),
-      summary: "Synthetic incident created from local runtime simulation.",
+      summary: "Local incident record created from the runtime simulator.",
     };
     db.incidents.unshift(incident);
     recordEvent("Incident Center", `Created incident: ${incident.title}`, "warning", incident);
@@ -1012,21 +1324,19 @@ async function routeApi(req, res, url) {
     return true;
   }
 
+  if (url.pathname === "/api/executions") {
+    sendJson(res, { executions: db.executions.slice(0, 120) });
+    return true;
+  }
+
   if (url.pathname === "/api/sandbox/run" && req.method === "POST") {
     const body = await readBody(req);
-    const execution = {
-      id: id("exec"),
-      command: body.command || "npm test -- --changed",
-      isolation: db.settings.sandboxNetwork ? "container-policy:networked" : "container-policy:restricted",
-      status: "recorded",
-      replayable: true,
-      durationMs: 980 + Math.floor(Math.random() * 900),
-      startedAt: now(),
-    };
-    db.executions.unshift(execution);
-    recordEvent("Sandbox", `Recorded execution: ${execution.command}`, "info", execution);
+    const task = body.agentTaskId ? db.agentTasks.find((item) => item.id === body.agentTaskId) : null;
+    if (task) normalizeAgentTask(task);
+    const execution = createToolExecution({ task, command: body.command || "npm test -- --changed", tool: body.tool || "sandbox.exec" });
+    syncAgentRuntimeState();
     await saveDb();
-    sendJson(res, { ok: true, execution });
+    sendJson(res, { ok: true, execution, tasks: db.agentTasks.slice(0, 120).map(agentTaskSummary), executions: db.executions.slice(0, 40) });
     return true;
   }
 

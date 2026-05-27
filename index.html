@@ -3,431 +3,273 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veltrix AI Engineering OS</title>
+    <title>Veltrix</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar" aria-label="Primary navigation">
+    <div class="shell">
+      <aside class="sidebar" aria-label="Main navigation">
         <div class="brand">
           <div class="brand-mark">V</div>
           <div>
             <strong>Veltrix</strong>
-            <span>Engineering OS</span>
+            <span>Local Engineering Console</span>
           </div>
         </div>
 
-        <nav class="nav-stack">
-          <button class="nav-item active" data-view="command" title="Command Center">
+        <nav class="nav">
+          <button class="nav-item active" data-view="overview">
             <span data-icon="activity"></span>
-            Command
+            Overview
           </button>
-          <button class="nav-item" data-view="repositories" title="Repositories">
+          <button class="nav-item" data-view="repository">
             <span data-icon="folder"></span>
-            Repos
+            Repository
           </button>
-          <button class="nav-item" data-view="agents" title="Agents">
+          <button class="nav-item" data-view="tasks">
             <span data-icon="bot"></span>
-            Agents
+            Tasks
           </button>
-          <button class="nav-item" data-view="architecture" title="Architecture">
-            <span data-icon="network"></span>
-            Architecture
+          <button class="nav-item" data-view="evidence">
+            <span data-icon="check"></span>
+            Evidence
           </button>
-          <button class="nav-item" data-view="workflows" title="Workflows">
-            <span data-icon="workflow"></span>
-            Workflows
-          </button>
-          <button class="nav-item" data-view="memory" title="Memory">
-            <span data-icon="memory"></span>
-            Memory
-          </button>
-          <button class="nav-item" data-view="incidents" title="Incidents">
-            <span data-icon="shield"></span>
-            Incidents
-          </button>
-          <button class="nav-item" data-view="deployments" title="Deployments">
-            <span data-icon="rocket"></span>
-            Deploys
-          </button>
-          <button class="nav-item" data-view="analytics" title="Analytics">
-            <span data-icon="chart"></span>
-            Analytics
-          </button>
-          <button class="nav-item" data-view="runtime" title="Runtime">
-            <span data-icon="cpu"></span>
+          <button class="nav-item" data-view="runtime">
+            <span data-icon="terminal"></span>
             Runtime
-          </button>
-          <button class="nav-item" data-view="plugins" title="Plugins">
-            <span data-icon="plug"></span>
-            Plugins
-          </button>
-          <button class="nav-item" data-view="settings" title="Settings">
-            <span data-icon="settings"></span>
-            Settings
           </button>
         </nav>
 
-        <div class="sidebar-card">
-          <div class="mini-label">Connected repos</div>
-          <div class="repo-count">12</div>
-          <div class="repo-meter"><span style="width: 78%"></span></div>
-          <p>Monorepo intelligence and cross-service links are actively indexed.</p>
+        <div class="sidebar-status">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="runtimeName">Starting runtime</strong>
+            <span id="runtimeMode">Local only</span>
+          </div>
         </div>
       </aside>
 
-      <main class="workspace">
+      <main class="main">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Autonomous multi-agent software engineering platform</p>
-            <h1>Veltrix AI Engineering OS</h1>
+            <p class="eyebrow">Workspace</p>
+            <h1>Ship changes with less guesswork.</h1>
           </div>
           <div class="topbar-actions">
-            <label class="search-box">
+            <label class="search">
               <span data-icon="search"></span>
-              <input id="globalSearch" type="search" placeholder="Ask about services, incidents, PRs..." />
+              <input id="globalSearch" type="search" placeholder="Search indexed code..." />
             </label>
-            <button class="icon-button" id="themeToggle" title="Toggle theme">
+            <button class="secondary-button" id="themeToggle" title="Toggle theme">
               <span data-icon="sun"></span>
             </button>
-            <button class="primary-button" id="runWorkflow">
+            <button class="primary-button" id="runFullPass">
               <span data-icon="play"></span>
-              Run analysis
+              Run full pass
             </button>
           </div>
         </header>
 
-        <section class="runtime-strip" aria-label="Local runtime status">
-          <div>
-            <span class="runtime-dot"></span>
-            <strong>Local runtime</strong>
-            <small id="runtimeHost">Detecting host...</small>
+        <section class="workbench">
+          <div class="step-card">
+            <span>1</span>
+            <strong>Scan</strong>
+            <p>Index the repository.</p>
           </div>
-          <div>
-            <strong>Memory Index</strong>
-            <small>Local repository state</small>
+          <div class="step-card">
+            <span>2</span>
+            <strong>Impact</strong>
+            <p>Find changed and affected files.</p>
           </div>
-          <div>
-            <strong>Sandbox</strong>
-            <small>Restricted execution</small>
+          <div class="step-card">
+            <span>3</span>
+            <strong>Assign</strong>
+            <p>Create task records for the work.</p>
           </div>
-          <div>
-            <strong>Event Bus</strong>
-            <small>Streaming live</small>
+          <div class="step-card">
+            <span>4</span>
+            <strong>Review</strong>
+            <p>Generate a clean handoff brief.</p>
           </div>
         </section>
 
-        <section class="status-grid" aria-label="Engineering health metrics">
-          <article class="metric-card critical">
-            <span>Architecture risk</span>
-            <strong id="riskScore">42</strong>
-            <small>7 drift signals</small>
-          </article>
-          <article class="metric-card healthy">
-            <span>Workflow success</span>
-            <strong>96%</strong>
-            <small>2 retries today</small>
-          </article>
-          <article class="metric-card warning">
-            <span>Open investigations</span>
-            <strong>4</strong>
-            <small>1 production issue</small>
-          </article>
-          <article class="metric-card neutral">
-            <span>Memory objects</span>
-            <strong>38.2k</strong>
-            <small>Docs, commits, incidents</small>
-          </article>
-        </section>
-
-        <section class="view active" id="view-command">
-          <div class="command-layout">
-            <section class="hero-panel">
-              <div class="hero-copy">
-                <p class="eyebrow">Live engineering brain</p>
-                <h2>Agents understand your system, plan the work, and execute with traceable context.</h2>
-                <p>Connect repositories, watch architecture evolve, launch durable workflows, and preserve every engineering decision in organizational memory.</p>
-                <div class="hero-actions">
-                  <button class="primary-button" id="connectRepo">
-                    <span data-icon="git"></span>
-                    Connect repository
-                  </button>
-                  <button class="secondary-button" data-view-jump="architecture">
-                    <span data-icon="map"></span>
-                    Inspect graph
-                  </button>
+        <section class="view active" id="view-overview">
+          <div class="hero-grid">
+            <section class="panel focus-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Next action</p>
+                  <h2 id="nextActionTitle">Scan the current workspace</h2>
                 </div>
               </div>
-              <canvas id="signalCanvas" aria-label="Animated system signal map"></canvas>
+              <p id="nextActionBody">Veltrix works best after it has indexed your repository. Start with the current folder or enter another local path.</p>
+              <div class="path-row">
+                <label class="path-input">
+                  <span data-icon="folder"></span>
+                  <input id="repoPath" type="text" spellcheck="false" placeholder="Current workspace" />
+                </label>
+                <button class="primary-button" id="scanRepo">
+                  <span data-icon="git"></span>
+                  Scan
+                </button>
+              </div>
+              <div class="quick-actions">
+                <button class="secondary-button" id="analyzeImpact">
+                  <span data-icon="network"></span>
+                  Analyze impact
+                </button>
+                <button class="secondary-button" id="assignTasks">
+                  <span data-icon="bot"></span>
+                  Assign tasks
+                </button>
+                <button class="secondary-button" id="generateReview">
+                  <span data-icon="check"></span>
+                  Review brief
+                </button>
+              </div>
             </section>
 
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Agent activity</p>
-                  <h3>Execution Feed</h3>
+                  <p class="eyebrow">Health</p>
+                  <h2>Current state</h2>
                 </div>
-                <span class="live-pill"><span></span> Live</span>
               </div>
-              <div class="feed" id="activityFeed"></div>
+              <div class="metric-list">
+                <div><span>Repositories</span><strong id="repoCount">0</strong></div>
+                <div><span>Risk score</span><strong id="riskScore">0</strong></div>
+                <div><span>Open tasks</span><strong id="openTaskCount">0</strong></div>
+                <div><span>Executions</span><strong id="executionCount">0</strong></div>
+              </div>
             </section>
           </div>
 
-          <div class="split-grid">
+          <div class="two-column">
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Current workflow</p>
-                  <h3>Repository intelligence</h3>
+                  <p class="eyebrow">Activity</p>
+                  <h2>Recent events</h2>
                 </div>
-                <button class="icon-button" title="Pause workflow"><span data-icon="pause"></span></button>
               </div>
-              <div class="workflow-track" id="workflowTrack"></div>
+              <div class="activity-list" id="activityList"></div>
             </section>
 
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Engineering health</p>
-                  <h3>Risk Radar</h3>
+                  <p class="eyebrow">Latest result</p>
+                  <h2>Impact summary</h2>
                 </div>
-                <button class="icon-button" title="Refresh radar"><span data-icon="refresh"></span></button>
               </div>
-              <div class="radar-wrap">
-                <canvas id="radarCanvas" aria-label="Engineering risk radar"></canvas>
-                <div class="radar-list" id="radarList"></div>
-              </div>
+              <div id="impactSummary" class="summary-box"></div>
             </section>
           </div>
         </section>
 
-        <section class="view" id="view-repositories">
+        <section class="view" id="view-repository">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Repository intelligence</p>
-              <h2>Local import, framework detection, service mapping, and semantic indexing</h2>
-            </div>
-            <div class="repo-import">
-              <label class="path-field">
-                <span data-icon="folder"></span>
-                <input id="repoPath" type="text" autocomplete="off" spellcheck="false" placeholder="D:\path\to\repository" />
-              </label>
-              <button class="primary-button" id="scanRepo"><span data-icon="git"></span> Scan repository</button>
+              <p class="eyebrow">Repository</p>
+              <h2>Scans, files, and dependency impact</h2>
             </div>
           </div>
-          <div class="repository-layout">
+          <div class="two-column">
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Connected repositories</p>
-                  <h3>Repository Index</h3>
+                  <p class="eyebrow">Indexed repositories</p>
+                  <h2>Scans</h2>
                 </div>
               </div>
-              <div class="repository-grid" id="repositoryGrid"></div>
+              <div id="repositoryList" class="repository-list"></div>
             </section>
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Latest analysis</p>
-                  <h3>Codebase Intelligence</h3>
+                  <p class="eyebrow">Changed surface</p>
+                  <h2>Impact details</h2>
                 </div>
               </div>
-              <div class="analysis-panel" id="analysisPanel"></div>
+              <div id="impactDetails" class="impact-details"></div>
             </section>
           </div>
         </section>
 
-        <section class="view" id="view-agents">
+        <section class="view" id="view-tasks">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Multi-agent operating model</p>
-              <h2>Specialized agents working as an engineering organization</h2>
+              <p class="eyebrow">Tasks</p>
+              <h2>Agent work queue</h2>
             </div>
-            <button class="primary-button" id="deployAgents"><span data-icon="zap"></span> Coordinate agents</button>
+            <button class="primary-button" id="assignTasksHeader">
+              <span data-icon="bot"></span>
+              Assign work
+            </button>
           </div>
-          <div class="agent-runtime-layout">
-            <div class="agent-grid" id="agentGrid"></div>
+          <div class="task-layout">
             <section class="panel">
-              <div class="panel-header">
+              <div id="taskList" class="task-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Execution queue</p>
-                  <h3>Agent Tasks</h3>
+                  <p class="eyebrow">Selected task</p>
+                  <h2 id="taskTitle">No task selected</h2>
                 </div>
               </div>
-              <div class="agent-task-list" id="agentTaskList"></div>
+              <div id="taskDetail" class="task-detail"></div>
+              <div class="task-actions">
+                <button class="secondary-button" id="advanceTask">
+                  <span data-icon="play"></span>
+                  Advance
+                </button>
+                <button class="secondary-button" id="runTaskTool">
+                  <span data-icon="terminal"></span>
+                  Run check
+                </button>
+                <button class="secondary-button" id="retryTask">
+                  <span data-icon="refresh"></span>
+                  Retry
+                </button>
+              </div>
             </section>
           </div>
         </section>
 
-        <section class="view" id="view-architecture">
+        <section class="view" id="view-evidence">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Live architecture visualization</p>
-              <h2>Service graph, drift signals, and dependency tracing</h2>
+              <p class="eyebrow">Evidence</p>
+              <h2>Review brief and recorded checks</h2>
             </div>
-            <div class="segmented" role="tablist">
-              <button class="active" data-graph-mode="services">Services</button>
-              <button data-graph-mode="risk">Risk</button>
-              <button data-graph-mode="runtime">Runtime</button>
-            </div>
+            <button class="primary-button" id="generateReviewHeader">
+              <span data-icon="check"></span>
+              Generate brief
+            </button>
           </div>
-          <section class="architecture-board">
-            <canvas id="architectureCanvas" aria-label="Interactive architecture graph"></canvas>
-            <aside class="inspector" id="nodeInspector">
-              <p class="eyebrow">Selected node</p>
-              <h3>No node selected</h3>
-              <p>Scan a repository to generate a file and dependency graph.</p>
-              <dl>
-                <div><dt>Health</dt><dd>Waiting</dd></div>
-                <div><dt>Inbound</dt><dd>0</dd></div>
-                <div><dt>Risk</dt><dd>0</dd></div>
-              </dl>
-            </aside>
-          </section>
-        </section>
-
-        <section class="view" id="view-workflows">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Durable workflow engine</p>
-              <h2>Event-triggered execution with checkpoints and retries</h2>
-            </div>
-            <button class="primary-button" id="newWorkflow"><span data-icon="plus"></span> New workflow</button>
-          </div>
-          <div class="workflow-layout">
+          <div class="two-column">
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Workflow catalog</p>
-                  <h3>Definitions</h3>
+                  <p class="eyebrow">Review</p>
+                  <h2>Latest brief</h2>
                 </div>
               </div>
-              <div class="workflow-grid" id="workflowGrid"></div>
+              <div id="reviewBrief" class="review-brief"></div>
             </section>
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Run history</p>
-                  <h3>Executions</h3>
-                </div>
-                <button class="secondary-button compact-button" id="advanceWorkflow"><span data-icon="play"></span> Advance</button>
-              </div>
-              <div class="workflow-run-list" id="workflowRunList"></div>
-            </section>
-            <section class="panel workflow-detail-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Run details</p>
-                  <h3 id="workflowDetailTitle">No run selected</h3>
+                  <p class="eyebrow">Tool audit</p>
+                  <h2>Executions</h2>
                 </div>
               </div>
-              <div class="workflow-detail" id="workflowDetail"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="view" id="view-memory">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Organizational memory</p>
-              <h2>Semantic retrieval across decisions, incidents, PRs, and docs</h2>
-            </div>
-            <label class="search-box memory-search">
-              <span data-icon="search"></span>
-              <input id="memorySearch" type="search" placeholder="Search files, imports, functions, classes..." />
-            </label>
-          </div>
-          <div class="memory-layout">
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Retrieved context</p>
-                  <h3>Memory Results</h3>
-                </div>
-              </div>
-              <div class="memory-results" id="memoryResults"></div>
-            </section>
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Knowledge graph</p>
-                  <h3>Linked Context</h3>
-                </div>
-              </div>
-              <div class="knowledge-map" id="knowledgeMap"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="view" id="view-incidents">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Incident response center</p>
-              <h2>Autonomous investigation, timelines, and rollback intelligence</h2>
-            </div>
-            <button class="danger-button" id="simulateIncident"><span data-icon="alert"></span> Simulate incident</button>
-          </div>
-          <div class="incident-layout">
-            <section class="panel timeline-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Production timeline</p>
-                  <h3>Auth latency spike</h3>
-                </div>
-              </div>
-              <div class="timeline" id="incidentTimeline"></div>
-            </section>
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Root cause hypothesis</p>
-                  <h3>Investigation Summary</h3>
-                </div>
-              </div>
-              <div class="hypothesis" id="hypothesis"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="view" id="view-deployments">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Deployment intelligence</p>
-              <h2>Rollout health, regression detection, and rollback confidence</h2>
-            </div>
-            <button class="primary-button" id="analyzeDeployments"><span data-icon="refresh"></span> Analyze deployments</button>
-          </div>
-          <div class="deployment-grid" id="deploymentGrid"></div>
-        </section>
-
-        <section class="view" id="view-analytics">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Engineering analytics</p>
-              <h2>Technical debt, reliability, delivery health, and risky hotspots</h2>
-            </div>
-          </div>
-          <div class="analytics-layout">
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Delivery metrics</p>
-                  <h3>Operating Scoreboard</h3>
-                </div>
-              </div>
-              <div class="analytics-scoreboard" id="analyticsScoreboard"></div>
-            </section>
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Debt intelligence</p>
-                  <h3>Prioritized Risk</h3>
-                </div>
-              </div>
-              <div class="risk-table" id="riskTable"></div>
+              <div id="executionList" class="execution-list"></div>
             </section>
           </div>
         </section>
@@ -435,84 +277,41 @@
         <section class="view" id="view-runtime">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Local-first runtime</p>
-              <h2>Desktop shell, local services, sandbox controls, and execution telemetry</h2>
+              <p class="eyebrow">Runtime</p>
+              <h2>Local services and settings</h2>
             </div>
-            <button class="primary-button" id="runSandbox"><span data-icon="terminal"></span> Run sandbox check</button>
+            <button class="primary-button" id="runSandbox">
+              <span data-icon="terminal"></span>
+              Record check
+            </button>
           </div>
-          <div class="runtime-layout">
+          <div class="two-column">
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Embedded services</p>
-                  <h3>Runtime Health</h3>
+                  <p class="eyebrow">Services</p>
+                  <h2>Runtime health</h2>
                 </div>
               </div>
-              <div class="service-grid" id="serviceGrid"></div>
+              <div id="serviceList" class="service-list"></div>
             </section>
             <section class="panel">
-              <div class="panel-header">
+              <div class="panel-head">
                 <div>
-                  <p class="eyebrow">Execution policy</p>
-                  <h3>Sandbox Controls</h3>
-                </div>
-              </div>
-              <div class="policy-list">
-                <label><input type="checkbox" checked /> Container isolation</label>
-                <label><input type="checkbox" checked /> Record execution replay</label>
-                <label><input type="checkbox" checked /> Require tool permissions</label>
-                <label><input type="checkbox" /> Allow network during tests</label>
-              </div>
-            </section>
-          </div>
-        </section>
-
-        <section class="view" id="view-plugins">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Extensibility layer</p>
-              <h2>Custom agents, integrations, analyzers, deployment hooks, and workflow actions</h2>
-            </div>
-            <button class="primary-button" id="installPlugin"><span data-icon="plus"></span> Add plugin</button>
-          </div>
-          <div class="plugin-grid" id="pluginGrid"></div>
-        </section>
-
-        <section class="view" id="view-settings">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Local product settings</p>
-              <h2>Models, privacy, sandbox policy, retention, and runtime behavior</h2>
-            </div>
-            <button class="primary-button" id="saveSettings"><span data-icon="check"></span> Save settings</button>
-          </div>
-          <div class="settings-layout">
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">AI runtime</p>
-                  <h3>Local Models</h3>
+                  <p class="eyebrow">Preferences</p>
+                  <h2>Settings</h2>
                 </div>
               </div>
               <div class="settings-list">
                 <label>Default model<input id="defaultModel" value="qwen2.5-coder" /></label>
-                <label>Memory retention days<input id="retentionDays" type="number" value="90" /></label>
-                <label class="switch-row"><span>Allow sandbox network</span><input id="sandboxNetwork" type="checkbox" /></label>
-                <label class="switch-row"><span>Share telemetry</span><input id="telemetry" type="checkbox" /></label>
+                <label>Retention days<input id="retentionDays" type="number" min="1" value="90" /></label>
+                <label class="check-row"><span>Allow sandbox network</span><input id="sandboxNetwork" type="checkbox" /></label>
+                <label class="check-row"><span>Share telemetry</span><input id="telemetry" type="checkbox" /></label>
               </div>
-            </section>
-            <section class="panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Product architecture</p>
-                  <h3>Runtime Layers</h3>
-                </div>
-              </div>
-              <div class="layer-list">
-                <div><strong>Desktop Layer</strong><p>Tauri shell, filesystem access, local terminal bridge, secure permissions.</p></div>
-                <div><strong>Runtime Layer</strong><p>Agents, workflows, events, memory, sandbox execution, plugin host.</p></div>
-                <div><strong>Cloud Layer</strong><p>Optional team sync, collaboration, remote dashboards, notifications.</p></div>
-              </div>
+              <button class="secondary-button" id="saveSettings">
+                <span data-icon="check"></span>
+                Save settings
+              </button>
             </section>
           </div>
         </section>
@@ -520,15 +319,6 @@
     </div>
 
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
-    <section class="bottom-console" aria-label="Veltrix runtime console">
-      <div class="console-tabs">
-        <button class="active">Events</button>
-        <button>Terminal</button>
-        <button>Agent Trace</button>
-        <button>Runtime Logs</button>
-      </div>
-      <div class="console-output" id="consoleOutput"></div>
-    </section>
     <script src="app.js"></script>
   </body>
 </html>

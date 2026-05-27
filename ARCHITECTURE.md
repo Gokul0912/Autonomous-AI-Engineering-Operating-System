@@ -1,68 +1,45 @@
-# Veltrix Architecture
+# Architecture
+
+Veltrix runs as a local service with a browser console. The runtime keeps its state in a JSON database so the product can be used without external infrastructure during development.
 
 ## Layers
 
-Veltrix is designed as a desktop application with an embedded local backend runtime.
-
-## Desktop Layer
-
-- Tauri shell
-- Filesystem access
-- Secure permission prompts
-- Local runtime launch
-- Terminal and sandbox bridge
-- Web dashboard rendering
-
-## Runtime Layer
-
-- Runtime API
-- Repository Intelligence Engine
-- Multi-Agent Runtime
-- Durable Workflow Engine
-- Engineering Memory System
-- Event Streaming System
-- Sandbox Execution Recorder
-- Plugin Host
-
-## Data Layer
-
-Current implementation:
-
-- `.veltrix/runtime-db.json`
-
-Production target:
-
-- PostgreSQL for durable entities
-- Redis Streams or NATS for events
-- Qdrant for vector memory
-- Local filesystem object storage for execution artifacts
-
-## AI Layer
-
-Production target:
-
-- Ollama local models
-- Qwen and DeepSeek coding models
-- Local embedding models
-- Agent tool registry
-- Permission-scoped execution
-
-## Service Map
-
-```mermaid
-flowchart LR
-  Desktop["Desktop Shell"] --> API["Runtime API"]
-  API --> Repo["Repository Indexer"]
-  API --> Agents["Agent Runtime"]
-  API --> Workflows["Workflow Engine"]
-  API --> Memory["Engineering Memory"]
-  API --> Sandbox["Sandbox"]
-  Repo --> Memory
-  Agents --> Memory
-  Workflows --> Sandbox
-  Sandbox --> Events["Event Bus"]
-  Events --> Workflows
-  Events --> Desktop
-  API --> Plugins["Plugin Host"]
+```text
+Console UI
+  -> Local API
+    -> Repository scanner
+    -> Dependency graph
+    -> Workflow store
+    -> Task store
+    -> Execution audit
+    -> Impact analysis
+    -> Review reports
 ```
 
+## Runtime
+
+The Node.js server owns all durable state and exposes the HTTP API used by the console. It also serves the static frontend.
+
+The runtime database is:
+
+```text
+.veltrix/runtime-db.json
+```
+
+This file contains repositories, indexed memory, workflow runs, task records, tool executions, impact analyses, review reports, settings, and events.
+
+## Repository Index
+
+The scanner walks a local directory, skips dependency/build folders, reads supported source files, and extracts lightweight code signals. It records local import edges and external package references. The architecture graph is generated from that index.
+
+## Workflows and Tasks
+
+Workflow definitions create persistent runs. Each checkpoint creates a task record with an owner, status, permissions, logs, attempts, and optional tool executions. Task state is updated through explicit API actions.
+
+## Impact and Review
+
+Impact analysis starts from Git working-tree changes when available. It traces nearby files through dependency edges, assigns risk, recommends workers, and builds a verification plan. Review reports are generated from the latest impact analysis.
+
+## Desktop Shell
+
+The `src-tauri` folder contains the desktop shell configuration. The current app can run in a browser during development and can later be packaged as a local desktop client.

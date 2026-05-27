@@ -1,8 +1,8 @@
 {
-  "name": "veltrix-ai-engineering-os",
+  "name": "veltrix-control-plane",
   "version": "0.1.0",
   "private": true,
-  "description": "A polished prototype of an autonomous multi-agent software engineering operating system.",
+  "description": "Local engineering control plane for repository analysis, workflow runs, task audit, and review preparation.",
   "scripts": {
     "start": "node server.js",
     "check": "node --check server.js && node --check app.js",

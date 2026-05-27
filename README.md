@@ -1,31 +1,41 @@
-# Veltrix AI Engineering OS
+# Veltrix
 
-Veltrix is a local-first autonomous AI engineering operating system for repository intelligence, multi-agent orchestration, workflow execution, architecture memory, incident response, deployment analysis, and engineering analytics.
+Veltrix is a local console for reviewing code changes before they go out.
 
-This repository contains the first complete product foundation:
+It scans a repository, works out which files are affected by the current change set, records task and tool activity, and turns the result into a short review brief. The app is intentionally local-first: runtime state lives in `.veltrix/runtime-db.json`, and the default setup does not need a hosted service.
 
-- Desktop-ready Tauri shell scaffold
-- Local Node.js runtime API
-- Persistent local runtime database in `.veltrix/runtime-db.json`
-- Repository scanner and framework/language detection
-- Multi-agent runtime with persisted task records
-- Durable workflow simulation with checkpoints
-- Incident response center
-- Deployment intelligence
-- Engineering memory retrieval
-- Plugin and settings surfaces
-- Live event stream and bottom runtime console
+## Why it exists
 
-## Run
+Small teams often keep change context spread across terminal output, pull request notes, screenshots, and memory. Veltrix keeps the useful parts together:
+
+- what changed
+- what else may be affected
+- which checks were recorded
+- which task records were created
+- what a reviewer should look at first
+
+The current app is a working local product surface, not a marketing shell. The main flow is:
+
+```text
+Scan -> Impact -> Assign -> Review
+```
+
+## Run it
 
 ```powershell
 npm.cmd run start
 ```
 
-Open:
+Then open:
 
 ```text
 http://localhost:4173
+```
+
+Check syntax:
+
+```powershell
+npm.cmd run check
 ```
 
 Health check:
@@ -34,68 +44,84 @@ Health check:
 Invoke-RestMethod -Uri http://localhost:4173/api/health
 ```
 
-## Scripts
+## Product Flow
+
+### Scan
+
+Indexes a local repository path. If no path is entered, Veltrix scans the current project folder.
+
+The scanner records readable source files, languages, imports, definitions, tags, dependency edges, and package references.
+
+### Impact
+
+Reads the Git working tree with:
 
 ```text
-npm.cmd run start        Start local runtime and dashboard
-npm.cmd run check        Syntax-check backend and frontend
-npm.cmd run desktop:dev  Run the Tauri shell after Tauri CLI is installed
+git status --porcelain
 ```
 
-## Runtime API
+It uses those files as the starting point, traces nearby dependency edges, scores risk, recommends review agents, and creates a verification plan.
+
+### Assign
+
+Creates persisted task records for the work queue. Tasks keep status, attempts, permissions, logs, and linked tool runs.
+
+### Review
+
+Generates a reviewer-facing brief with changed files, impacted modules, recommended agents, verification steps, and merge blockers.
+
+## What Is Stored
+
+Veltrix writes runtime data to:
+
+```text
+.veltrix/runtime-db.json
+```
+
+That file contains scan results, memory records, workflow runs, task records, execution audit entries, impact analyses, review briefs, settings, and event history.
+
+## Main Files
+
+```text
+index.html        App shell and product layout
+styles.css        Responsive interface styling
+app.js            Client rendering and API calls
+server.js         Local API, scanner, impact analysis, tasks, review briefs
+src-tauri/        Desktop shell scaffold
+.veltrix/         Local runtime data, created at runtime
+```
+
+## API Surface
 
 ```text
 GET  /api/bootstrap
+GET  /api/health
 GET  /api/runtime
-GET  /api/repositories
+
 POST /api/repositories/scan
-GET  /api/agents
-GET  /api/agents/tasks
+POST /api/repositories/impact
+GET  /api/repositories/impact
+
 POST /api/agents/coordinate
-GET  /api/architecture
-GET  /api/workflows
-POST /api/workflows/run
-GET  /api/workflows/runs
-GET  /api/workflows/runs/:id
-POST /api/workflows/runs/:id/advance
-GET  /api/incidents
-POST /api/incidents/simulate
-GET  /api/deployments
-GET  /api/analytics
-GET  /api/memory/search?q=redis
-GET  /api/plugins
+GET  /api/agents/tasks
+GET  /api/agents/tasks/:id
+POST /api/agents/tasks/:id/advance
+POST /api/agents/tasks/:id/fail
+POST /api/agents/tasks/:id/retry
+POST /api/agents/tasks/:id/tool-run
+
+POST /api/reviews/generate
+GET  /api/reviews
+
+POST /api/sandbox/run
+GET  /api/executions
+
+GET  /api/memory/search?q=term
 GET  /api/settings
 PATCH /api/settings
-POST /api/sandbox/run
 GET  /api/events
 ```
 
-## Product Architecture
+## Current Boundaries
 
-Veltrix is designed as:
-
-```text
-Desktop Shell
-  -> Local Runtime API
-    -> Repository Indexer
-    -> Agent Runtime
-    -> Workflow Engine
-    -> Event Bus
-    -> Engineering Memory
-    -> Sandbox Execution
-    -> Plugin Host
-```
-
-The current version uses a zero-dependency local runtime so it can run immediately. Subsystems that are not connected yet report honest empty or unconfigured states. The next production phase can attach Docker, PostgreSQL, Redis, Qdrant, Ollama, and LangGraph without changing the product model.
-
-## Repository Intelligence
-
-Repository scans accept a local path, validate that it exists, index readable source files, extract imports/definitions/tags, resolve local import edges where possible, summarize external package references, and generate the architecture graph from measured module relationships.
-
-## Workflow Execution
-
-Workflow runs are persisted with checkpoint state, progress, timing, run events, and inspection APIs. The dashboard can start runs from workflow definitions, show run history, inspect a selected execution, and manually advance checkpoints.
-
-## Agent Execution
-
-Workflow checkpoints now create persisted agent tasks. Each task records the assigned agent, source workflow run, checkpoint, status, timing, and event history. Agent cards derive their load and active work from the task queue, and the Agents view includes the live execution queue. Manual agent coordination also creates persisted tasks instead of temporary UI-only plans.
+Veltrix does not apply code patches by itself, run real containers, or sync data to a hosted workspace. Tool execution is recorded as an audit object through the local runtime. Those boundaries are deliberate for this version; the UI only promotes the parts that are actually usable today.
